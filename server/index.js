@@ -3,7 +3,7 @@ const cors = require('cors')
 
 const app = express()
 
-// 允许跨域（前端访问后端）
+// 允许跨域
 app.use(cors({
   origin: [
     'https://my-ai-tool-three.vercel.app',
@@ -18,7 +18,7 @@ app.use(express.json())
 // 模拟数据库
 let users = []
 
-// 测试接口
+// 测试接口（必须有）
 app.get('/', (req, res) => {
   res.send('Backend is running')
 })
@@ -46,29 +46,23 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body
 
-  if (!username || !password) {
-    return res.json({ msg: '请输入用户名和密码' })
-  }
-
-  const user = users.find(u => u.username === username)
+  const user = users.find(
+    u => u.username === username && u.password === password
+  )
 
   if (!user) {
-    return res.json({ msg: '用户不存在' })
-  }
-
-  if (user.password !== password) {
-    return res.json({ msg: '密码错误' })
+    return res.json({ msg: '用户名或密码错误' })
   }
 
   res.json({
     msg: '登录成功',
-    user: { username: user.username }
+    user
   })
 })
 
-// 端口
-const PORT = process.env.PORT || 3001
+// ⭐关键：必须用 Railway 的端口
+const PORT = process.env.PORT || 8080
 
 app.listen(PORT, () => {
-  console.log('服务器启动：http://localhost:' + PORT)
+  console.log('Server running on port ' + PORT)
 })
