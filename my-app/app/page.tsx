@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import words from './words.json'
 
+const API_URL = 'https://my-ai-tool-production-a91f.up.railway.app'
+
 export default function Home() {
   const [text, setText] = useState('')
   const [highlighted, setHighlighted] = useState('')
@@ -11,12 +13,16 @@ export default function Home() {
   const [inputUser, setInputUser] = useState('')
   const [password, setPassword] = useState('')
 
-  // 登录
   const handleLogin = async () => {
-    const res = await fetch('https://my-ai-tool-production-a91f.up.railway.app/login', {
+    if (!inputUser || !password) {
+      alert('请输入用户名和密码')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: inputUser, password })
+      body: JSON.stringify({ username: inputUser, password }),
     })
 
     const data = await res.json()
@@ -28,19 +34,22 @@ export default function Home() {
     }
   }
 
-  // 注册
   const handleRegister = async () => {
-    const res = await fetch('http://localhost:3001/register', {
+    if (!inputUser || !password) {
+      alert('请输入用户名和密码')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: inputUser, password })
+      body: JSON.stringify({ username: inputUser, password }),
     })
 
     const data = await res.json()
     alert(data.msg)
   }
 
-  // 功能
   const handleProcess = () => {
     if (!user) {
       alert('请先登录')
@@ -65,7 +74,6 @@ export default function Home() {
     setReplaced(replaceText)
   }
 
-  // 未登录
   if (!user) {
     return (
       <div style={{ padding: '50px' }}>
@@ -89,6 +97,7 @@ export default function Home() {
         <br /><br />
 
         <button onClick={handleLogin}>登录</button>
+
         <button onClick={handleRegister} style={{ marginLeft: '10px' }}>
           注册
         </button>
@@ -96,16 +105,18 @@ export default function Home() {
     )
   }
 
-  // 登录后
   return (
     <div style={{ padding: '50px' }}>
       <h1>违禁词检测系统</h1>
 
       <p>当前用户：{user}</p>
 
+      <button onClick={() => setUser('')}>退出登录</button>
+
       <textarea
         rows={5}
         style={{ width: '100%', marginTop: '20px' }}
+        placeholder="请输入要检测的内容"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
