@@ -13,7 +13,7 @@ export default function Home() {
 
   // 登录
   const handleLogin = async () => {
-    const res = await fetch('http://localhost:3001/login', {
+    const res = await fetch('https://my-ai-tool-production-a91f.up.railway.app/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: inputUser, password })
