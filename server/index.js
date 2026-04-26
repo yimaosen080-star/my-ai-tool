@@ -3,7 +3,17 @@ const cors = require('cors')
 
 const app = express()
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'https://my-ai-tool-three.vercel.app',
+    'http://localhost:3000'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}))
+
+app.options('*', cors())
+
 app.use(express.json())
 
 let users = []
