@@ -15,12 +15,15 @@ app.use(cors({
 
 app.use(express.json())
 
+// 模拟数据库
 let users = []
 
+// 测试接口
 app.get('/', (req, res) => {
   res.send('Backend is running')
 })
 
+// 注册接口
 app.post('/register', (req, res) => {
   const { username, password } = req.body
 
