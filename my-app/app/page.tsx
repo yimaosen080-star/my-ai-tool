@@ -15,7 +15,6 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 登录
   const handleLogin = async () => {
     const res = await fetch(`${API_URL}/login`, {
       method: 'POST',
@@ -32,7 +31,6 @@ export default function Home() {
     }
   }
 
-  // 注册
   const handleRegister = async () => {
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
@@ -44,7 +42,6 @@ export default function Home() {
     alert(data.msg)
   }
 
-  // 违禁词处理
   const handleProcess = () => {
     if (!user) {
       alert('请先登录')
@@ -69,7 +66,6 @@ export default function Home() {
     setReplaced(replaceText)
   }
 
-  // AI改写 ⭐
   const handleAI = async () => {
     if (!user) {
       alert('请先登录')
@@ -82,6 +78,7 @@ export default function Home() {
     }
 
     setLoading(true)
+    setAiResult('AI处理中，请稍等...')
 
     try {
       const res = await fetch(`${API_URL}/ai-rewrite`, {
@@ -91,15 +88,19 @@ export default function Home() {
       })
 
       const data = await res.json()
-      setAiResult(data.result || '没有返回结果')
+
+      if (data.result) {
+        setAiResult(data.result)
+      } else {
+        setAiResult(JSON.stringify(data, null, 2))
+      }
     } catch (err) {
-      alert('AI请求失败')
+      setAiResult('AI请求失败：' + String(err))
     }
 
     setLoading(false)
   }
 
-  // 未登录界面
   if (!user) {
     return (
       <div style={{ padding: '50px' }}>
@@ -130,7 +131,6 @@ export default function Home() {
     )
   }
 
-  // 登录后界面
   return (
     <div style={{ padding: '50px' }}>
       <h1>违禁词检测系统</h1>
@@ -139,8 +139,10 @@ export default function Home() {
 
       <button onClick={() => setUser('')}>退出登录</button>
 
+      <br /><br />
+
       <textarea
-        rows={5}
+        rows={6}
         style={{ width: '100%', marginTop: '20px' }}
         placeholder="请输入文案"
         value={text}
@@ -162,7 +164,7 @@ export default function Home() {
       <div>{replaced}</div>
 
       <p>AI改写：</p>
-      <div>{aiResult}</div>
+      <pre style={{ whiteSpace: 'pre-wrap' }}>{aiResult}</pre>
     </div>
   )
 }
