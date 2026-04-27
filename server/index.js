@@ -28,13 +28,9 @@ app.post('/register', (req, res) => {
   }
 
   const exist = users.find(u => u.username === username)
-
-  if (exist) {
-    return res.json({ msg: '用户已存在' })
-  }
+  if (exist) return res.json({ msg: '用户已存在' })
 
   users.push({ username, password })
-
   res.json({ msg: '注册成功' })
 })
 
@@ -45,9 +41,7 @@ app.post('/login', (req, res) => {
     u => u.username === username && u.password === password
   )
 
-  if (!user) {
-    return res.json({ msg: '用户名或密码错误' })
-  }
+  if (!user) return res.json({ msg: '用户名或密码错误' })
 
   res.json({
     msg: '登录成功',
@@ -91,7 +85,22 @@ app.post('/ai-rewrite', async (req, res) => {
 
     const data = await response.json()
 
-    const result = data.choices?.[0]?.message?.content || ''
+    if (!response.ok) {
+      return res.json({
+        msg: 'DeepSeek调用失败',
+        status: response.status,
+        error: data
+      })
+    }
+
+    const result = data.choices?.[0]?.message?.content
+
+    if (!result) {
+      return res.json({
+        msg: 'DeepSeek没有返回内容',
+        raw: data
+      })
+    }
 
     res.json({
       msg: 'AI改写成功',
