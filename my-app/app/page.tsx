@@ -56,7 +56,7 @@ export default function Home() {
 
       highlightText = highlightText.replace(
         reg,
-        `<span style="color:red;font-weight:bold;">${item.bad}</span>`
+        `<span style="color:#ef4444;font-weight:700;background:#fee2e2;padding:2px 4px;border-radius:6px;">${item.bad}</span>`
       )
 
       replaceText = replaceText.split(item.bad).join(item.good)
@@ -103,68 +103,237 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div style={{ padding: '50px' }}>
-        <h1>登录 / 注册</h1>
+      <main style={styles.page}>
+        <section style={styles.loginCard}>
+          <div style={styles.badge}>AI 文案合规工具</div>
+          <h1 style={styles.title}>登录 / 注册</h1>
+          <p style={styles.desc}>检测违禁词，自动规则改写，并用 AI 生成更合规的文案。</p>
 
-        <input
-          placeholder="用户名"
-          value={inputUser}
-          onChange={(e) => setInputUser(e.target.value)}
-        />
+          <input
+            style={styles.input}
+            placeholder="用户名"
+            value={inputUser}
+            onChange={(e) => setInputUser(e.target.value)}
+          />
 
-        <br /><br />
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="密码"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        <input
-          type="password"
-          placeholder="密码"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <br /><br />
-
-        <button onClick={handleLogin}>登录</button>
-        <button onClick={handleRegister} style={{ marginLeft: '10px' }}>
-          注册
-        </button>
-      </div>
+          <div style={styles.row}>
+            <button style={styles.primaryBtn} onClick={handleLogin}>登录</button>
+            <button style={styles.secondaryBtn} onClick={handleRegister}>注册</button>
+          </div>
+        </section>
+      </main>
     )
   }
 
   return (
-    <div style={{ padding: '50px' }}>
-      <h1>违禁词检测系统</h1>
+    <main style={styles.page}>
+      <section style={styles.container}>
+        <header style={styles.header}>
+          <div>
+            <div style={styles.badge}>AI 文案合规工具</div>
+            <h1 style={styles.title}>违禁词检测系统</h1>
+            <p style={styles.desc}>当前用户：{user}</p>
+          </div>
 
-      <p>当前用户：{user}</p>
+          <button style={styles.logoutBtn} onClick={() => setUser('')}>
+            退出登录
+          </button>
+        </header>
 
-      <button onClick={() => setUser('')}>退出登录</button>
+        <div style={styles.grid}>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>输入文案</h2>
 
-      <br /><br />
+            <textarea
+              rows={10}
+              style={styles.textarea}
+              placeholder="请输入要检测或改写的文案..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
 
-      <textarea
-        rows={6}
-        style={{ width: '100%', marginTop: '20px' }}
-        placeholder="请输入文案"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+            <div style={styles.row}>
+              <button style={styles.primaryBtn} onClick={handleProcess}>
+                违禁词检测
+              </button>
 
-      <br /><br />
+              <button style={styles.aiBtn} onClick={handleAI}>
+                {loading ? 'AI处理中...' : 'AI智能改写'}
+              </button>
+            </div>
+          </div>
 
-      <button onClick={handleProcess}>违禁词检测</button>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>检测结果</h2>
+            <div
+              style={styles.resultBox}
+              dangerouslySetInnerHTML={{ __html: highlighted || '暂无检测结果' }}
+            />
 
-      <button onClick={handleAI} style={{ marginLeft: '10px' }}>
-        {loading ? 'AI处理中...' : 'AI智能改写'}
-      </button>
+            <h2 style={styles.cardTitle}>规则改写</h2>
+            <div style={styles.resultBox}>{replaced || '暂无规则改写结果'}</div>
 
-      <p>检测结果：</p>
-      <div dangerouslySetInnerHTML={{ __html: highlighted }} />
-
-      <p>规则改写：</p>
-      <div>{replaced}</div>
-
-      <p>AI改写：</p>
-      <pre style={{ whiteSpace: 'pre-wrap' }}>{aiResult}</pre>
-    </div>
+            <h2 style={styles.cardTitle}>AI改写</h2>
+            <pre style={styles.aiResult}>{aiResult || '暂无AI改写结果'}</pre>
+          </div>
+        </div>
+      </section>
+    </main>
   )
+}
+
+const styles: any = {
+  page: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #020617 100%)',
+    color: '#e5e7eb',
+    padding: '40px',
+    fontFamily: 'Arial, sans-serif'
+  },
+  container: {
+    maxWidth: '1200px',
+    margin: '0 auto'
+  },
+  loginCard: {
+    maxWidth: '420px',
+    margin: '100px auto',
+    background: 'rgba(15, 23, 42, 0.9)',
+    border: '1px solid rgba(148, 163, 184, 0.25)',
+    borderRadius: '24px',
+    padding: '36px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.35)'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '28px'
+  },
+  badge: {
+    display: 'inline-block',
+    padding: '6px 12px',
+    borderRadius: '999px',
+    background: 'rgba(59,130,246,0.16)',
+    color: '#93c5fd',
+    fontSize: '14px',
+    marginBottom: '12px'
+  },
+  title: {
+    fontSize: '36px',
+    margin: '0 0 10px',
+    color: '#ffffff'
+  },
+  desc: {
+    color: '#cbd5e1',
+    marginBottom: '24px'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '24px'
+  },
+  card: {
+    background: 'rgba(15, 23, 42, 0.88)',
+    border: '1px solid rgba(148, 163, 184, 0.22)',
+    borderRadius: '24px',
+    padding: '24px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.28)'
+  },
+  cardTitle: {
+    fontSize: '18px',
+    color: '#ffffff',
+    margin: '0 0 12px'
+  },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '14px 16px',
+    marginBottom: '14px',
+    borderRadius: '14px',
+    border: '1px solid #334155',
+    background: '#020617',
+    color: '#ffffff',
+    outline: 'none'
+  },
+  textarea: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '16px',
+    borderRadius: '18px',
+    border: '1px solid #334155',
+    background: '#020617',
+    color: '#ffffff',
+    resize: 'vertical',
+    outline: 'none',
+    fontSize: '15px',
+    lineHeight: '1.7'
+  },
+  row: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '16px'
+  },
+  primaryBtn: {
+    border: 'none',
+    borderRadius: '14px',
+    padding: '12px 18px',
+    background: '#2563eb',
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontWeight: 700
+  },
+  secondaryBtn: {
+    border: '1px solid #475569',
+    borderRadius: '14px',
+    padding: '12px 18px',
+    background: 'transparent',
+    color: '#e5e7eb',
+    cursor: 'pointer',
+    fontWeight: 700
+  },
+  aiBtn: {
+    border: 'none',
+    borderRadius: '14px',
+    padding: '12px 18px',
+    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontWeight: 700
+  },
+  logoutBtn: {
+    border: '1px solid #475569',
+    borderRadius: '14px',
+    padding: '10px 16px',
+    background: 'transparent',
+    color: '#e5e7eb',
+    cursor: 'pointer'
+  },
+  resultBox: {
+    minHeight: '70px',
+    background: '#020617',
+    border: '1px solid #334155',
+    borderRadius: '16px',
+    padding: '16px',
+    marginBottom: '20px',
+    color: '#e5e7eb',
+    lineHeight: '1.7'
+  },
+  aiResult: {
+    minHeight: '120px',
+    whiteSpace: 'pre-wrap',
+    background: '#020617',
+    border: '1px solid #334155',
+    borderRadius: '16px',
+    padding: '16px',
+    color: '#d1fae5',
+    lineHeight: '1.7'
+  }
 }
