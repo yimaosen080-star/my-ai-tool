@@ -16,26 +16,68 @@ app.use(express.json())
 
 let users = []
 
+function addDays(date, days) {
+  const d = new Date(date || new Date())
+  d.setDate(d.getDate() + days)
+  return d.toISOString()
+}
+
+function isVip(user) {
+  if (!user.vipUntil) return false
+  return new Date(user.vipUntil).getTime() > Date.now()
+}
+
+function safeUser(user) {
+  return {
+    username: user.username,
+    inviteCode: user.inviteCode,
+    freeUses: user.freeUses,
+    vipUntil: user.vipUntil || '',
+    isVip: isVip(user)
+  }
+}
+
 app.get('/', (req, res) => {
   res.send('Backend is running')
 })
 
 app.post('/register', (req, res) => {
-  const { username, password } = req.body
+  const { username, password, inviteCode } = req.body
 
   if (!username || !password) {
     return res.json({ msg: '请输入用户名和密码' })
   }
 
   const exist = users.find(u => u.username === username)
-
   if (exist) {
     return res.json({ msg: '用户已存在' })
   }
 
-  users.push({ username, password })
+  const newUser = {
+    username,
+    password,
+    inviteCode: username + Math.floor(Math.random() * 9999),
+    freeUses: 3,
+    vipUntil: '',
+    invitedBy: inviteCode || ''
+  }
 
-  res.json({ msg: '注册成功' })
+  users.push(newUser)
+
+  if (inviteCode) {
+    const inviter = users.find(u => u.inviteCode === inviteCode)
+    if (inviter) {
+      inviter.vipUntil = addDays(
+        inviter.vipUntil && isVip(inviter) ? inviter.vipUntil : new Date(),
+        3
+      )
+    }
+  }
+
+  res.json({
+    msg: inviteCode ? '注册成功，邀请人已获得3天会员' : '注册成功',
+    user: safeUser(newUser)
+  })
 })
 
 app.post('/login', (req, res) => {
@@ -51,27 +93,65 @@ app.post('/login', (req, res) => {
 
   res.json({
     msg: '登录成功',
-    user: { username: user.username }
+    user: safeUser(user)
   })
 })
 
-// 不同场景提示词
+app.post('/buy-vip', (req, res) => {
+  const { username, plan } = req.body
+
+  const user = users.find(u => u.username === username)
+  if (!user) {
+    return res.json({ msg: '用户不存在' })
+  }
+
+  const daysMap = {
+    week: 7,
+    month: 30,
+    year: 365
+  }
+
+  const days = daysMap[plan] || 30
+
+  user.vipUntil = addDays(
+    user.vipUntil && isVip(user) ? user.vipUntil : new Date(),
+    days
+  )
+
+  res.json({
+    msg: `开通成功，已增加${days}天会员`,
+    user: safeUser(user)
+  })
+})
+
 function getPrompt(type, text) {
   const map = {
-    douyin: `请把这段抖音文案改写得更合规，避免违规词、夸大、诱导：\n${text}`,
-    xiaohongshu: `请把这段小红书文案改写得更自然真实，去掉硬广和违规表达：\n${text}`,
-    novel: `请把这段小说内容进行降敏处理，保留剧情但表达更安全：\n${text}`,
-    adlaw: `请把这段文案中的广告法违规词（如最、第一、绝对）改掉：\n${text}`,
+    douyin: `请把这段抖音文案改写得更合规，避免违规词、夸大、诱导，但保留吸引力：\n${text}`,
+    xiaohongshu: `请把这段小红书文案改写得更自然真实，去掉硬广和违规表达，保留种草感：\n${text}`,
+    novel: `请把这段小说内容进行降敏处理，保留剧情和情绪，但表达更安全：\n${text}`,
+    adlaw: `请把这段文案中的广告法违规词、极限词、绝对化表达改掉：\n${text}`,
     copywriting: `请优化这段文案，让它更有吸引力但不过度夸大：\n${text}`,
   }
 
   return map[type] || map.copywriting
 }
 
-// ⭐真正AI接口
 app.post('/ai-rewrite', async (req, res) => {
   try {
-    const { text, type } = req.body
+    const { username, text, type } = req.body
+
+    const user = users.find(u => u.username === username)
+    if (!user) {
+      return res.json({ msg: '请先登录' })
+    }
+
+    if (!isVip(user)) {
+      if (user.freeUses <= 0) {
+        return res.json({ msg: '免费次数已用完，请开通会员' })
+      }
+
+      user.freeUses -= 1
+    }
 
     if (!text) {
       return res.json({ msg: '请输入内容' })
@@ -88,7 +168,7 @@ app.post('/ai-rewrite', async (req, res) => {
         messages: [
           {
             role: 'system',
-            content: '你是中文文案合规改写专家'
+            content: '你是中文文案合规改写专家，擅长违禁词检测、广告法合规、短视频和小红书文案优化。'
           },
           {
             role: 'user',
@@ -100,12 +180,12 @@ app.post('/ai-rewrite', async (req, res) => {
     })
 
     const data = await response.json()
-
     const result = data.choices?.[0]?.message?.content || 'AI返回空'
 
     res.json({
       msg: '成功',
-      result
+      result,
+      user: safeUser(user)
     })
 
   } catch (err) {
