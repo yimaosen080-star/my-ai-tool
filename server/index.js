@@ -14,74 +14,58 @@ app.use(cors({
 
 app.use(express.json())
 
+let users = []
+
 app.get('/', (req, res) => {
   res.send('Backend is running')
 })
 
-function getPrompt(type, text) {
-  const prompts = {
-    douyin: `你是抖音短视频文案合规审核和改写助手。请检测下面文案中可能涉及的违规、夸大、诱导、极限、引流表达，并改写成更适合抖音发布的合规版本。只输出改写后的文案，不要解释。\n\n原文：${text}`,
+app.post('/register', (req, res) => {
+  const { username, password } = req.body
 
-    xiaohongshu: `你是小红书种草文案合规优化助手。请把下面文案改写得更自然、更像真实分享，减少硬广、夸大承诺、极限词和诱导表达，保留种草感。只输出改写后的文案，不要解释。\n\n原文：${text}`,
-
-    novel: `你是小说内容安全改写助手。请将下面小说内容中可能敏感、过激、违规、擦边的表达降敏改写，保留剧情和情绪张力，但表达更安全合规。只输出改写后的文本，不要解释。\n\n原文：${text}`,
-
-    adlaw: `你是广告法合规审核助手。请将下面宣传文案中的极限词、绝对化表达、虚假承诺、夸大宣传改成更合规的商业表达。只输出改写后的文案，不要解释。\n\n原文：${text}`,
-
-    copywriting: `你是中文商业文案优化助手。请将下面文案改写得更清晰、有吸引力、自然、有转化力，但不要夸大、不要违规。只输出优化后的文案，不要解释。\n\n原文：${text}`,
+  if (!username || !password) {
+    return res.json({ msg: '请输入用户名和密码' })
   }
 
-  return prompts[type] || prompts.copywriting
-}
+  const exist = users.find(u => u.username === username)
+
+  if (exist) {
+    return res.json({ msg: '用户已存在' })
+  }
+
+  users.push({ username, password })
+
+  res.json({ msg: '注册成功' })
+})
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body
+
+  const user = users.find(
+    u => u.username === username && u.password === password
+  )
+
+  if (!user) {
+    return res.json({ msg: '用户名或密码错误' })
+  }
+
+  res.json({
+    msg: '登录成功',
+    user: { username: user.username }
+  })
+})
 
 app.post('/ai-rewrite', async (req, res) => {
-  try {
-    const { type, text } = req.body
+  const { text, type } = req.body
 
-    if (!text) {
-      return res.json({ msg: '请输入内容' })
-    }
-
-    if (!process.env.DEEPSEEK_API_KEY) {
-      return res.json({ msg: 'DeepSeek API Key 未配置' })
-    }
-
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content:
-              '你是一个中文内容合规检测与文案改写助手，擅长短视频、小红书、小说、广告法和商业文案优化。',
-          },
-          {
-            role: 'user',
-            content: getPrompt(type, text),
-          },
-        ],
-        temperature: 0.7,
-      }),
-    })
-
-    const data = await response.json()
-    const result = data.choices?.[0]?.message?.content || ''
-
-    res.json({
-      msg: 'AI改写成功',
-      result,
-    })
-  } catch (error) {
-    res.json({
-      msg: 'AI改写失败',
-      error: String(error),
-    })
+  if (!text) {
+    return res.json({ msg: '请输入内容' })
   }
+
+  res.json({
+    msg: 'AI改写成功',
+    result: `【${type || '默认'}】改写结果：\n${text}`
+  })
 })
 
 const PORT = process.env.PORT || 8080
