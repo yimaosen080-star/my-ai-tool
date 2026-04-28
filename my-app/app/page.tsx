@@ -5,7 +5,7 @@ import { useState } from 'react'
 const API_URL = 'https://my-ai-tool-production-a91f.up.railway.app'
 
 const tools = [
-  { key: 'douyin', name: '抖音违禁词检测', desc: '短视频、口播、带货文案检测改写' },
+  { key: 'douyin', name: '抖音违禁词检测', desc: '短视频、口播、带货文案合规改写' },
   { key: 'xiaohongshu', name: '小红书违禁词检测', desc: '种草、探店、品牌软广优化' },
   { key: 'novel', name: '小说违禁词检测', desc: '网文、章节、剧情内容降敏' },
   { key: 'adlaw', name: '广告法极限词检测', desc: '企业宣传、产品卖点合规' },
@@ -22,10 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
-    if (!inputUser || !password) {
-      alert('请输入用户名和密码')
-      return
-    }
+    if (!inputUser || !password) return alert('请输入用户名和密码')
 
     const res = await fetch(`${API_URL}/login`, {
       method: 'POST',
@@ -34,19 +31,11 @@ export default function Home() {
     })
 
     const data = await res.json()
-
-    if (data.msg === '登录成功') {
-      setUser(data.user.username)
-    } else {
-      alert(data.msg)
-    }
+    data.msg === '登录成功' ? setUser(data.user.username) : alert(data.msg)
   }
 
   const handleRegister = async () => {
-    if (!inputUser || !password) {
-      alert('请输入用户名和密码')
-      return
-    }
+    if (!inputUser || !password) return alert('请输入用户名和密码')
 
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
@@ -59,10 +48,7 @@ export default function Home() {
   }
 
   const handleRewrite = async () => {
-    if (!text.trim()) {
-      alert('请输入要检测/改写的内容')
-      return
-    }
+    if (!text.trim()) return alert('请输入要检测/改写的内容')
 
     setLoading(true)
     setResult('')
@@ -76,7 +62,7 @@ export default function Home() {
 
       const data = await res.json()
       setResult(data.result || data.msg || '没有返回结果')
-    } catch (error) {
+    } catch {
       setResult('请求失败，请检查后端是否正常')
     }
 
@@ -85,53 +71,59 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div style={{ padding: '50px', maxWidth: '500px', margin: '0 auto' }}>
-        <h1>登录 / 注册</h1>
+      <main style={styles.page}>
+        <section style={styles.loginCard}>
+          <div style={styles.badge}>AI Content Compliance</div>
+          <h1 style={styles.loginTitle}>智能违禁词检测系统</h1>
+          <p style={styles.loginDesc}>
+            面向短视频、小红书、小说、广告法与商业文案的 AI 合规改写工具。
+          </p>
 
-        <input
-          placeholder="用户名"
-          value={inputUser}
-          onChange={(e) => setInputUser(e.target.value)}
-          style={{ width: '100%', padding: '12px', marginTop: '20px' }}
-        />
+          <input
+            placeholder="用户名"
+            value={inputUser}
+            onChange={(e) => setInputUser(e.target.value)}
+            style={styles.input}
+          />
 
-        <input
-          type="password"
-          placeholder="密码"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '12px', marginTop: '15px' }}
-        />
+          <input
+            type="password"
+            placeholder="密码"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
 
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={handleLogin}>登录</button>
-          <button onClick={handleRegister} style={{ marginLeft: '10px' }}>
-            注册
+          <button onClick={handleLogin} style={styles.primaryBtn}>
+            登录系统
           </button>
-        </div>
-      </div>
+
+          <button onClick={handleRegister} style={styles.secondaryBtn}>
+            注册账号
+          </button>
+        </section>
+      </main>
     )
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+    <main style={styles.dashboard}>
+      <header style={styles.header}>
         <div>
-          <h1>AI违禁词检测与文案改写工具</h1>
-          <p>当前用户：{user}</p>
+          <div style={styles.badge}>AI Compliance Platform</div>
+          <h1 style={styles.title}>AI违禁词检测与文案改写工具</h1>
+          <p style={styles.subtitle}>专业内容合规检测，适合短视频、种草、小说、广告与商业文案。</p>
         </div>
 
-        <button onClick={() => setUser('')}>退出登录</button>
-      </div>
+        <div style={styles.userBox}>
+          <span>当前用户：{user}</span>
+          <button onClick={() => setUser('')} style={styles.logoutBtn}>
+            退出
+          </button>
+        </div>
+      </header>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginTop: '30px',
-        }}
-      >
+      <section style={styles.toolGrid}>
         {tools.map((tool) => (
           <button
             key={tool.key}
@@ -140,73 +132,263 @@ export default function Home() {
               setResult('')
             }}
             style={{
-              padding: '18px',
+              ...styles.toolCard,
               border:
                 selectedTool.key === tool.key
-                  ? '2px solid #111'
-                  : '1px solid #ddd',
-              borderRadius: '12px',
-              background: selectedTool.key === tool.key ? '#f2f2f2' : '#fff',
-              textAlign: 'left',
-              cursor: 'pointer',
+                  ? '1px solid rgba(255,255,255,0.9)'
+                  : '1px solid rgba(255,255,255,0.12)',
+              background:
+                selectedTool.key === tool.key
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08))'
+                  : 'rgba(255,255,255,0.06)',
             }}
           >
-            <h3>{tool.name}</h3>
-            <p style={{ fontSize: '14px', color: '#666' }}>{tool.desc}</p>
+            <h3 style={styles.toolName}>{tool.name}</h3>
+            <p style={styles.toolDesc}>{tool.desc}</p>
           </button>
         ))}
-      </div>
+      </section>
 
-      <div style={{ marginTop: '35px' }}>
-        <h2>当前工具：{selectedTool.name}</h2>
+      <section style={styles.workArea}>
+        <div style={styles.panel}>
+          <h2 style={styles.panelTitle}>输入内容</h2>
+          <p style={styles.panelDesc}>当前模式：{selectedTool.name}</p>
 
-        <textarea
-          rows={8}
-          placeholder="请输入要检测或改写的文案..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '15px',
-            fontSize: '16px',
-            borderRadius: '10px',
-            border: '1px solid #ccc',
-          }}
-        />
+          <textarea
+            rows={10}
+            placeholder="请输入要检测或改写的文案..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            style={styles.textarea}
+          />
 
-        <br /><br />
-
-        <button
-          onClick={handleRewrite}
-          disabled={loading}
-          style={{
-            padding: '12px 28px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#111',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          {loading ? '正在处理...' : '一键检测并改写'}
-        </button>
-      </div>
-
-      <div style={{ marginTop: '30px' }}>
-        <h2>改写结果</h2>
-        <div
-          style={{
-            minHeight: '120px',
-            background: '#f7f7f7',
-            padding: '20px',
-            borderRadius: '10px',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {result || '处理结果会显示在这里'}
+          <button onClick={handleRewrite} disabled={loading} style={styles.actionBtn}>
+            {loading ? 'AI正在分析改写...' : '一键检测并改写'}
+          </button>
         </div>
-      </div>
-    </div>
+
+        <div style={styles.panel}>
+          <h2 style={styles.panelTitle}>AI改写结果</h2>
+          <p style={styles.panelDesc}>系统会尽量保留原意，同时降低违规风险。</p>
+
+          <div style={styles.resultBox}>
+            {result || '改写结果会显示在这里'}
+          </div>
+
+          <div style={styles.payBox}>
+            <h3 style={styles.payTitle}>高级版即将开放</h3>
+            <p style={styles.payDesc}>支持批量检测、会员次数、企业词库、付费解锁。</p>
+          </div>
+        </div>
+      </section>
+    </main>
   )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: '100vh',
+    background: 'radial-gradient(circle at top, #243b55, #141e30 55%, #070b12)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '24px',
+    color: '#fff',
+  },
+  loginCard: {
+    width: '100%',
+    maxWidth: '460px',
+    padding: '42px',
+    borderRadius: '28px',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+    backdropFilter: 'blur(18px)',
+  },
+  badge: {
+    display: 'inline-block',
+    padding: '8px 14px',
+    borderRadius: '999px',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    fontSize: '13px',
+    color: '#dbeafe',
+    marginBottom: '18px',
+  },
+  loginTitle: {
+    fontSize: '34px',
+    margin: '0 0 14px',
+    letterSpacing: '-1px',
+  },
+  loginDesc: {
+    color: '#cbd5e1',
+    lineHeight: 1.7,
+    marginBottom: '28px',
+  },
+  input: {
+    width: '100%',
+    padding: '15px 16px',
+    marginBottom: '14px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'rgba(255,255,255,0.1)',
+    color: '#fff',
+    outline: 'none',
+    fontSize: '15px',
+  },
+  primaryBtn: {
+    width: '100%',
+    padding: '15px',
+    borderRadius: '14px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #60a5fa, #8b5cf6)',
+    color: '#fff',
+    fontSize: '16px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    marginTop: '8px',
+  },
+  secondaryBtn: {
+    width: '100%',
+    padding: '14px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'transparent',
+    color: '#e5e7eb',
+    fontSize: '15px',
+    cursor: 'pointer',
+    marginTop: '12px',
+  },
+  dashboard: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #0f172a, #111827 55%, #020617)',
+    color: '#fff',
+    padding: '34px',
+  },
+  header: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '24px',
+    alignItems: 'flex-start',
+  },
+  title: {
+    fontSize: '38px',
+    margin: '0 0 12px',
+    letterSpacing: '-1px',
+  },
+  subtitle: {
+    color: '#94a3b8',
+    fontSize: '16px',
+  },
+  userBox: {
+    padding: '14px 18px',
+    borderRadius: '18px',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+  },
+  logoutBtn: {
+    border: 'none',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+  },
+  toolGrid: {
+    maxWidth: '1200px',
+    margin: '32px auto',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+    gap: '16px',
+  },
+  toolCard: {
+    padding: '22px',
+    borderRadius: '22px',
+    color: '#fff',
+    cursor: 'pointer',
+    textAlign: 'left',
+    backdropFilter: 'blur(12px)',
+  },
+  toolName: {
+    margin: '0 0 10px',
+    fontSize: '18px',
+  },
+  toolDesc: {
+    margin: 0,
+    color: '#cbd5e1',
+    lineHeight: 1.6,
+    fontSize: '14px',
+  },
+  workArea: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '20px',
+  },
+  panel: {
+    padding: '26px',
+    borderRadius: '26px',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.25)',
+  },
+  panelTitle: {
+    margin: '0 0 8px',
+    fontSize: '24px',
+  },
+  panelDesc: {
+    margin: '0 0 18px',
+    color: '#94a3b8',
+  },
+  textarea: {
+    width: '100%',
+    padding: '16px',
+    borderRadius: '18px',
+    border: '1px solid rgba(255,255,255,0.16)',
+    background: 'rgba(15,23,42,0.85)',
+    color: '#fff',
+    fontSize: '15px',
+    lineHeight: 1.7,
+    outline: 'none',
+  },
+  actionBtn: {
+    width: '100%',
+    marginTop: '18px',
+    padding: '16px',
+    borderRadius: '16px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+    color: '#fff',
+    fontSize: '16px',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  resultBox: {
+    minHeight: '220px',
+    whiteSpace: 'pre-wrap',
+    lineHeight: 1.8,
+    padding: '18px',
+    borderRadius: '18px',
+    background: 'rgba(15,23,42,0.9)',
+    color: '#e5e7eb',
+    border: '1px solid rgba(255,255,255,0.1)',
+  },
+  payBox: {
+    marginTop: '18px',
+    padding: '18px',
+    borderRadius: '18px',
+    background: 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(249,115,22,0.12))',
+    border: '1px solid rgba(250,204,21,0.25)',
+  },
+  payTitle: {
+    margin: '0 0 8px',
+  },
+  payDesc: {
+    margin: 0,
+    color: '#fde68a',
+  },
 }
