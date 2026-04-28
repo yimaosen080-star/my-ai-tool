@@ -5,38 +5,58 @@ import { useState } from 'react'
 const API_URL = 'https://my-ai-tool-production-a91f.up.railway.app'
 
 const tools = [
-  {
-    key: 'douyin',
-    name: '抖音违禁词检测',
-    desc: '适合短视频、口播、带货文案检测和改写',
-  },
-  {
-    key: 'xiaohongshu',
-    name: '小红书违禁词检测',
-    desc: '适合种草文案、探店笔记、品牌软广优化',
-  },
-  {
-    key: 'novel',
-    name: '小说违禁词检测',
-    desc: '适合网文、短篇小说、章节内容降敏改写',
-  },
-  {
-    key: 'adlaw',
-    name: '广告法极限词检测',
-    desc: '适合企业宣传、销售话术、产品介绍',
-  },
-  {
-    key: 'copywriting',
-    name: 'AI文案优化',
-    desc: '适合普通文案润色、标题优化、表达升级',
-  },
+  { key: 'douyin', name: '抖音违禁词检测', desc: '短视频、口播、带货文案检测改写' },
+  { key: 'xiaohongshu', name: '小红书违禁词检测', desc: '种草、探店、品牌软广优化' },
+  { key: 'novel', name: '小说违禁词检测', desc: '网文、章节、剧情内容降敏' },
+  { key: 'adlaw', name: '广告法极限词检测', desc: '企业宣传、产品卖点合规' },
+  { key: 'copywriting', name: 'AI文案优化', desc: '标题、口播、成交文案优化' },
 ]
 
 export default function Home() {
+  const [user, setUser] = useState('')
+  const [inputUser, setInputUser] = useState('')
+  const [password, setPassword] = useState('')
   const [selectedTool, setSelectedTool] = useState(tools[0])
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleLogin = async () => {
+    if (!inputUser || !password) {
+      alert('请输入用户名和密码')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: inputUser, password }),
+    })
+
+    const data = await res.json()
+
+    if (data.msg === '登录成功') {
+      setUser(data.user.username)
+    } else {
+      alert(data.msg)
+    }
+  }
+
+  const handleRegister = async () => {
+    if (!inputUser || !password) {
+      alert('请输入用户名和密码')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: inputUser, password }),
+    })
+
+    const data = await res.json()
+    alert(data.msg)
+  }
 
   const handleRewrite = async () => {
     if (!text.trim()) {
@@ -51,25 +71,58 @@ export default function Home() {
       const res = await fetch(`${API_URL}/ai-rewrite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: selectedTool.key,
-          text,
-        }),
+        body: JSON.stringify({ type: selectedTool.key, text }),
       })
 
       const data = await res.json()
       setResult(data.result || data.msg || '没有返回结果')
     } catch (error) {
-      setResult('请求失败，请检查后端是否正常运行')
+      setResult('请求失败，请检查后端是否正常')
     }
 
     setLoading(false)
   }
 
+  if (!user) {
+    return (
+      <div style={{ padding: '50px', maxWidth: '500px', margin: '0 auto' }}>
+        <h1>登录 / 注册</h1>
+
+        <input
+          placeholder="用户名"
+          value={inputUser}
+          onChange={(e) => setInputUser(e.target.value)}
+          style={{ width: '100%', padding: '12px', marginTop: '20px' }}
+        />
+
+        <input
+          type="password"
+          placeholder="密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ width: '100%', padding: '12px', marginTop: '15px' }}
+        />
+
+        <div style={{ marginTop: '20px' }}>
+          <button onClick={handleLogin}>登录</button>
+          <button onClick={handleRegister} style={{ marginLeft: '10px' }}>
+            注册
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '40px', maxWidth: '1100px', margin: '0 auto' }}>
-      <h1>AI违禁词检测与文案改写工具</h1>
-      <p>选择检测场景，输入文案，一键检测并合规改写。</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div>
+          <h1>AI违禁词检测与文案改写工具</h1>
+          <p>当前用户：{user}</p>
+        </div>
+
+        <button onClick={() => setUser('')}>退出登录</button>
+      </div>
 
       <div
         style={{
