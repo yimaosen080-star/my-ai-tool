@@ -13,9 +13,10 @@ const tools = [
 ]
 
 export default function Home() {
-  const [user, setUser] = useState('')
+  const [user, setUser] = useState<any>(null)
   const [inputUser, setInputUser] = useState('')
   const [password, setPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [selectedTool, setSelectedTool] = useState(tools[0])
   const [text, setText] = useState('')
   const [result, setResult] = useState('')
@@ -31,7 +32,7 @@ export default function Home() {
     })
 
     const data = await res.json()
-    data.msg === '登录成功' ? setUser(data.user.username) : alert(data.msg)
+    data.msg === '登录成功' ? setUser(data.user) : alert(data.msg)
   }
 
   const handleRegister = async () => {
@@ -40,11 +41,12 @@ export default function Home() {
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: inputUser, password }),
+      body: JSON.stringify({ username: inputUser, password, inviteCode }),
     })
 
     const data = await res.json()
     alert(data.msg)
+    if (data.user) setUser(data.user)
   }
 
   const handleRewrite = async () => {
@@ -53,20 +55,30 @@ export default function Home() {
     setLoading(true)
     setResult('')
 
-    try {
-      const res = await fetch(`${API_URL}/ai-rewrite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: selectedTool.key, text }),
-      })
+    const res = await fetch(`${API_URL}/ai-rewrite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user.username, type: selectedTool.key, text }),
+    })
 
-      const data = await res.json()
-      setResult(data.result || data.msg || '没有返回结果')
-    } catch {
-      setResult('请求失败，请检查后端是否正常')
-    }
+    const data = await res.json()
+
+    if (data.user) setUser(data.user)
+    setResult(data.result || data.msg || '没有返回结果')
 
     setLoading(false)
+  }
+
+  const buyVip = async (plan: string) => {
+    const res = await fetch(`${API_URL}/buy-vip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user.username, plan }),
+    })
+
+    const data = await res.json()
+    alert(data.msg)
+    if (data.user) setUser(data.user)
   }
 
   if (!user) {
@@ -76,7 +88,7 @@ export default function Home() {
           <div style={styles.badge}>AI Content Compliance</div>
           <h1 style={styles.loginTitle}>智能违禁词检测系统</h1>
           <p style={styles.loginDesc}>
-            面向短视频、小红书、小说、广告法与商业文案的 AI 合规改写工具。
+            支持抖音、小红书、小说、广告法与商业文案的 AI 合规检测与改写。
           </p>
 
           <input
@@ -91,6 +103,13 @@ export default function Home() {
             placeholder="密码"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
+
+          <input
+            placeholder="邀请码（选填）"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
             style={styles.input}
           />
 
@@ -116,12 +135,41 @@ export default function Home() {
         </div>
 
         <div style={styles.userBox}>
-          <span>当前用户：{user}</span>
-          <button onClick={() => setUser('')} style={styles.logoutBtn}>
-            退出
-          </button>
+          <p>用户：{user.username}</p>
+          <p>免费次数：{user.freeUses}</p>
+          <p>会员状态：{user.isVip ? `有效至 ${user.vipUntil.slice(0, 10)}` : '未开通'}</p>
+          <button onClick={() => setUser(null)} style={styles.logoutBtn}>退出</button>
         </div>
       </header>
+
+      <section style={styles.inviteBox}>
+        <h2>邀请奖励</h2>
+        <p>你的邀请码：<b>{user.inviteCode}</b></p>
+        <p>好友注册时填写你的邀请码，你将获得 <b>3天会员</b> 奖励。</p>
+      </section>
+
+      <section style={styles.payGrid}>
+        <div style={styles.priceCard}>
+          <h3>周会员</h3>
+          <p style={styles.price}>¥9.9</p>
+          <p>解锁 7 天 AI 改写</p>
+          <button onClick={() => buyVip('week')} style={styles.payBtn}>立即开通</button>
+        </div>
+
+        <div style={styles.priceCardHot}>
+          <h3>月会员</h3>
+          <p style={styles.price}>¥29.9</p>
+          <p>解锁 30 天 AI 改写</p>
+          <button onClick={() => buyVip('month')} style={styles.payBtn}>推荐开通</button>
+        </div>
+
+        <div style={styles.priceCard}>
+          <h3>年会员</h3>
+          <p style={styles.price}>¥199</p>
+          <p>解锁 365 天 AI 改写</p>
+          <button onClick={() => buyVip('year')} style={styles.payBtn}>开通年费</button>
+        </div>
+      </section>
 
       <section style={styles.toolGrid}>
         {tools.map((tool) => (
@@ -133,14 +181,12 @@ export default function Home() {
             }}
             style={{
               ...styles.toolCard,
-              border:
-                selectedTool.key === tool.key
-                  ? '1px solid rgba(255,255,255,0.9)'
-                  : '1px solid rgba(255,255,255,0.12)',
-              background:
-                selectedTool.key === tool.key
-                  ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08))'
-                  : 'rgba(255,255,255,0.06)',
+              border: selectedTool.key === tool.key
+                ? '1px solid rgba(255,255,255,0.9)'
+                : '1px solid rgba(255,255,255,0.12)',
+              background: selectedTool.key === tool.key
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08))'
+                : 'rgba(255,255,255,0.06)',
             }}
           >
             <h3 style={styles.toolName}>{tool.name}</h3>
@@ -173,11 +219,6 @@ export default function Home() {
 
           <div style={styles.resultBox}>
             {result || '改写结果会显示在这里'}
-          </div>
-
-          <div style={styles.payBox}>
-            <h3 style={styles.payTitle}>高级版即将开放</h3>
-            <p style={styles.payDesc}>支持批量检测、会员次数、企业词库、付费解锁。</p>
           </div>
         </div>
       </section>
@@ -215,16 +256,8 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#dbeafe',
     marginBottom: '18px',
   },
-  loginTitle: {
-    fontSize: '34px',
-    margin: '0 0 14px',
-    letterSpacing: '-1px',
-  },
-  loginDesc: {
-    color: '#cbd5e1',
-    lineHeight: 1.7,
-    marginBottom: '28px',
-  },
+  loginTitle: { fontSize: '34px', margin: '0 0 14px' },
+  loginDesc: { color: '#cbd5e1', lineHeight: 1.7, marginBottom: '28px' },
   input: {
     width: '100%',
     padding: '15px 16px',
@@ -273,28 +306,51 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '24px',
     alignItems: 'flex-start',
   },
-  title: {
-    fontSize: '38px',
-    margin: '0 0 12px',
-    letterSpacing: '-1px',
-  },
-  subtitle: {
-    color: '#94a3b8',
-    fontSize: '16px',
-  },
+  title: { fontSize: '38px', margin: '0 0 12px' },
+  subtitle: { color: '#94a3b8', fontSize: '16px' },
   userBox: {
-    padding: '14px 18px',
+    padding: '16px',
     borderRadius: '18px',
     background: 'rgba(255,255,255,0.08)',
     border: '1px solid rgba(255,255,255,0.12)',
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
   },
-  logoutBtn: {
+  logoutBtn: { border: 'none', borderRadius: '10px', padding: '8px 12px', cursor: 'pointer' },
+  inviteBox: {
+    maxWidth: '1200px',
+    margin: '24px auto',
+    padding: '22px',
+    borderRadius: '22px',
+    background: 'rgba(96,165,250,0.12)',
+    border: '1px solid rgba(96,165,250,0.25)',
+  },
+  payGrid: {
+    maxWidth: '1200px',
+    margin: '24px auto',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '18px',
+  },
+  priceCard: {
+    padding: '24px',
+    borderRadius: '24px',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
+  },
+  priceCardHot: {
+    padding: '24px',
+    borderRadius: '24px',
+    background: 'linear-gradient(135deg, rgba(250,204,21,0.22), rgba(249,115,22,0.14))',
+    border: '1px solid rgba(250,204,21,0.35)',
+  },
+  price: { fontSize: '34px', fontWeight: 800, margin: '10px 0' },
+  payBtn: {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '12px',
     border: 'none',
-    borderRadius: '10px',
-    padding: '8px 12px',
+    background: '#fff',
+    color: '#111827',
+    fontWeight: 700,
     cursor: 'pointer',
   },
   toolGrid: {
@@ -312,16 +368,8 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'left',
     backdropFilter: 'blur(12px)',
   },
-  toolName: {
-    margin: '0 0 10px',
-    fontSize: '18px',
-  },
-  toolDesc: {
-    margin: 0,
-    color: '#cbd5e1',
-    lineHeight: 1.6,
-    fontSize: '14px',
-  },
+  toolName: { margin: '0 0 10px', fontSize: '18px' },
+  toolDesc: { margin: 0, color: '#cbd5e1', lineHeight: 1.6, fontSize: '14px' },
   workArea: {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -334,16 +382,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '26px',
     background: 'rgba(255,255,255,0.08)',
     border: '1px solid rgba(255,255,255,0.12)',
-    boxShadow: '0 24px 70px rgba(0,0,0,0.25)',
   },
-  panelTitle: {
-    margin: '0 0 8px',
-    fontSize: '24px',
-  },
-  panelDesc: {
-    margin: '0 0 18px',
-    color: '#94a3b8',
-  },
+  panelTitle: { margin: '0 0 8px', fontSize: '24px' },
+  panelDesc: { margin: '0 0 18px', color: '#94a3b8' },
   textarea: {
     width: '100%',
     padding: '16px',
@@ -376,19 +417,5 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(15,23,42,0.9)',
     color: '#e5e7eb',
     border: '1px solid rgba(255,255,255,0.1)',
-  },
-  payBox: {
-    marginTop: '18px',
-    padding: '18px',
-    borderRadius: '18px',
-    background: 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(249,115,22,0.12))',
-    border: '1px solid rgba(250,204,21,0.25)',
-  },
-  payTitle: {
-    margin: '0 0 8px',
-  },
-  payDesc: {
-    margin: 0,
-    color: '#fde68a',
   },
 }
