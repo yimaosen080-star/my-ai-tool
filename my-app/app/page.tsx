@@ -22,6 +22,12 @@ export default function Home() {
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [showAdmin, setShowAdmin] = useState(false)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminUsername, setAdminUsername] = useState('')
+  const [adminDays, setAdminDays] = useState('30')
+  const [adminResult, setAdminResult] = useState('')
+
   const handleLogin = async () => {
     if (!inputUser || !password) return alert('请输入用户名和密码')
 
@@ -79,6 +85,53 @@ export default function Home() {
     const data = await res.json()
     alert(data.msg)
     if (data.user) setUser(data.user)
+  }
+
+  const adminOpenVip = async () => {
+    if (!adminPassword || !adminUsername || !adminDays) {
+      alert('请填写管理员密码、用户名和天数')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/admin-open-vip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminPassword,
+        username: adminUsername,
+        days: Number(adminDays),
+      }),
+    })
+
+    const data = await res.json()
+    setAdminResult(data.msg)
+
+    if (user && data.user && data.user.username === user.username) {
+      setUser(data.user)
+    }
+  }
+
+  const adminQueryUser = async () => {
+    if (!adminPassword || !adminUsername) {
+      alert('请填写管理员密码和用户名')
+      return
+    }
+
+    const res = await fetch(`${API_URL}/admin-user-info`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPassword, username: adminUsername }),
+    })
+
+    const data = await res.json()
+
+    if (data.user) {
+      setAdminResult(
+        `用户：${data.user.username}\n免费次数：${data.user.freeUses}\n会员状态：${data.user.isVip ? '会员' : '非会员'}\n到期时间：${data.user.vipUntil || '无'}\n邀请码：${data.user.inviteCode}`
+      )
+    } else {
+      setAdminResult(data.msg)
+    }
   }
 
   if (!user) {
@@ -183,6 +236,51 @@ export default function Home() {
           <p>微信 / 支付宝收款码</p>
           <p>客服微信：这里改成你的微信号</p>
         </div>
+      </section>
+
+      <section style={styles.adminBox}>
+        <button onClick={() => setShowAdmin(!showAdmin)} style={styles.adminToggle}>
+          {showAdmin ? '收起管理员后台' : '打开管理员后台'}
+        </button>
+
+        {showAdmin && (
+          <div style={styles.adminPanel}>
+            <h2>管理员后台</h2>
+            <p>用于人工收款后，给指定用户开通会员。</p>
+
+            <input
+              type="password"
+              placeholder="管理员密码"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              style={styles.adminInput}
+            />
+
+            <input
+              placeholder="用户名称"
+              value={adminUsername}
+              onChange={(e) => setAdminUsername(e.target.value)}
+              style={styles.adminInput}
+            />
+
+            <select
+              value={adminDays}
+              onChange={(e) => setAdminDays(e.target.value)}
+              style={styles.adminInput}
+            >
+              <option value="7">7天会员</option>
+              <option value="30">30天会员</option>
+              <option value="365">365天会员</option>
+            </select>
+
+            <div style={styles.adminBtnRow}>
+              <button onClick={adminOpenVip} style={styles.adminBtn}>开通会员</button>
+              <button onClick={adminQueryUser} style={styles.adminBtnSecondary}>查询用户</button>
+            </div>
+
+            <pre style={styles.adminResult}>{adminResult || '操作结果会显示在这里'}</pre>
+          </div>
+        )}
       </section>
 
       <section style={styles.toolGrid}>
@@ -379,13 +477,8 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, rgba(56,189,248,0.14), rgba(139,92,246,0.14))',
     border: '1px solid rgba(255,255,255,0.14)',
   },
-  warnText: {
-    color: '#facc15',
-  },
-  qrBox: {
-    minWidth: '210px',
-    textAlign: 'center',
-  },
+  warnText: { color: '#facc15' },
+  qrBox: { minWidth: '210px', textAlign: 'center' },
   fakeQr: {
     width: '150px',
     height: '150px',
@@ -397,6 +490,66 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 800,
+  },
+  adminBox: {
+    maxWidth: '1200px',
+    margin: '24px auto',
+  },
+  adminToggle: {
+    padding: '14px 22px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  adminPanel: {
+    marginTop: '16px',
+    padding: '24px',
+    borderRadius: '24px',
+    background: 'rgba(15,23,42,0.9)',
+    border: '1px solid rgba(255,255,255,0.14)',
+  },
+  adminInput: {
+    width: '100%',
+    padding: '13px',
+    marginTop: '12px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+  },
+  adminBtnRow: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '14px',
+  },
+  adminBtn: {
+    padding: '12px 18px',
+    borderRadius: '12px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  adminBtnSecondary: {
+    padding: '12px 18px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'transparent',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  adminResult: {
+    marginTop: '16px',
+    padding: '16px',
+    borderRadius: '14px',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#e5e7eb',
+    whiteSpace: 'pre-wrap',
   },
   toolGrid: {
     maxWidth: '1200px',

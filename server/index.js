@@ -16,6 +16,8 @@ app.use(express.json())
 
 let users = []
 
+const ADMIN_PASSWORD = 'admin888'
+
 function addDays(date, days) {
   const d = new Date(date || new Date())
   d.setDate(d.getDate() + days)
@@ -49,6 +51,7 @@ app.post('/register', (req, res) => {
   }
 
   const exist = users.find(u => u.username === username)
+
   if (exist) {
     return res.json({ msg: '用户已存在' })
   }
@@ -56,7 +59,7 @@ app.post('/register', (req, res) => {
   const newUser = {
     username,
     password,
-    inviteCode: username + Math.floor(Math.random() * 9999),
+    inviteCode: username + Math.floor(1000 + Math.random() * 9000),
     freeUses: 3,
     vipUntil: '',
     invitedBy: inviteCode || ''
@@ -101,6 +104,7 @@ app.post('/buy-vip', (req, res) => {
   const { username, plan } = req.body
 
   const user = users.find(u => u.username === username)
+
   if (!user) {
     return res.json({ msg: '用户不存在' })
   }
@@ -124,6 +128,51 @@ app.post('/buy-vip', (req, res) => {
   })
 })
 
+app.post('/admin-open-vip', (req, res) => {
+  const { adminPassword, username, days } = req.body
+
+  if (adminPassword !== ADMIN_PASSWORD) {
+    return res.json({ msg: '管理员密码错误' })
+  }
+
+  const user = users.find(u => u.username === username)
+
+  if (!user) {
+    return res.json({ msg: '用户不存在' })
+  }
+
+  const addDayCount = Number(days) || 30
+
+  user.vipUntil = addDays(
+    user.vipUntil && isVip(user) ? user.vipUntil : new Date(),
+    addDayCount
+  )
+
+  res.json({
+    msg: `已为 ${username} 开通 ${addDayCount} 天会员`,
+    user: safeUser(user)
+  })
+})
+
+app.post('/admin-user-info', (req, res) => {
+  const { adminPassword, username } = req.body
+
+  if (adminPassword !== ADMIN_PASSWORD) {
+    return res.json({ msg: '管理员密码错误' })
+  }
+
+  const user = users.find(u => u.username === username)
+
+  if (!user) {
+    return res.json({ msg: '用户不存在' })
+  }
+
+  res.json({
+    msg: '查询成功',
+    user: safeUser(user)
+  })
+})
+
 function getPrompt(type, text) {
   const map = {
     douyin: `请把这段抖音文案改写得更合规，避免违规词、夸大、诱导，但保留吸引力：\n${text}`,
@@ -141,6 +190,7 @@ app.post('/ai-rewrite', async (req, res) => {
     const { username, text, type } = req.body
 
     const user = users.find(u => u.username === username)
+
     if (!user) {
       return res.json({ msg: '请先登录' })
     }
