@@ -153,21 +153,35 @@ export default function Home() {
           <h3>周会员</h3>
           <p style={styles.price}>¥9.9</p>
           <p>解锁 7 天 AI 改写</p>
-          <button onClick={() => buyVip('week')} style={styles.payBtn}>立即开通</button>
+          <button onClick={() => buyVip('week')} style={styles.payBtn}>模拟开通</button>
         </div>
 
         <div style={styles.priceCardHot}>
           <h3>月会员</h3>
           <p style={styles.price}>¥29.9</p>
           <p>解锁 30 天 AI 改写</p>
-          <button onClick={() => buyVip('month')} style={styles.payBtn}>推荐开通</button>
+          <button onClick={() => buyVip('month')} style={styles.payBtn}>模拟开通</button>
         </div>
 
         <div style={styles.priceCard}>
           <h3>年会员</h3>
           <p style={styles.price}>¥199</p>
           <p>解锁 365 天 AI 改写</p>
-          <button onClick={() => buyVip('year')} style={styles.payBtn}>开通年费</button>
+          <button onClick={() => buyVip('year')} style={styles.payBtn}>模拟开通</button>
+        </div>
+      </section>
+
+      <section style={styles.manualPayBox}>
+        <div>
+          <h2>人工开通会员</h2>
+          <p>扫码付款后添加客服，备注你的用户名，人工开通会员。</p>
+          <p style={styles.warnText}>当前支付为人工开通版本，后续可升级自动支付。</p>
+        </div>
+
+        <div style={styles.qrBox}>
+          <div style={styles.fakeQr}>收款码</div>
+          <p>微信 / 支付宝收款码</p>
+          <p>客服微信：这里改成你的微信号</p>
         </div>
       </section>
 
@@ -352,6 +366,37 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#111827',
     fontWeight: 700,
     cursor: 'pointer',
+  },
+  manualPayBox: {
+    maxWidth: '1200px',
+    margin: '24px auto',
+    padding: '26px',
+    borderRadius: '26px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '24px',
+    alignItems: 'center',
+    background: 'linear-gradient(135deg, rgba(56,189,248,0.14), rgba(139,92,246,0.14))',
+    border: '1px solid rgba(255,255,255,0.14)',
+  },
+  warnText: {
+    color: '#facc15',
+  },
+  qrBox: {
+    minWidth: '210px',
+    textAlign: 'center',
+  },
+  fakeQr: {
+    width: '150px',
+    height: '150px',
+    margin: '0 auto 12px',
+    borderRadius: '18px',
+    background: '#fff',
+    color: '#111827',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 800,
   },
   toolGrid: {
     maxWidth: '1200px',
