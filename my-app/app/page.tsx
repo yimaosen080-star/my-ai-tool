@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 const API_URL = 'https://my-ai-tool-production-a91f.up.railway.app'
+const WECHAT_ID = 'A15069916247'
 
 const tools = [
   { key: 'douyin', name: '抖音违禁词检测', desc: '短视频、口播、带货文案合规改写' },
@@ -71,20 +72,11 @@ export default function Home() {
 
     if (data.user) setUser(data.user)
     setResult(data.result || data.msg || '没有返回结果')
-
     setLoading(false)
   }
 
   const buyVip = async (plan: string) => {
-    const res = await fetch(`${API_URL}/buy-vip`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user.username, plan }),
-    })
-
-    const data = await res.json()
-    alert(data.msg)
-    if (data.user) setUser(data.user)
+    alert('请先扫码支付，然后添加客服微信：' + WECHAT_ID + '，备注你的用户名：' + user.username)
   }
 
   const adminOpenVip = async () => {
@@ -144,35 +136,12 @@ export default function Home() {
             支持抖音、小红书、小说、广告法与商业文案的 AI 合规检测与改写。
           </p>
 
-          <input
-            placeholder="用户名"
-            value={inputUser}
-            onChange={(e) => setInputUser(e.target.value)}
-            style={styles.input}
-          />
+          <input placeholder="用户名" value={inputUser} onChange={(e) => setInputUser(e.target.value)} style={styles.input} />
+          <input type="password" placeholder="密码" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} />
+          <input placeholder="邀请码（选填）" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} style={styles.input} />
 
-          <input
-            type="password"
-            placeholder="密码"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-          />
-
-          <input
-            placeholder="邀请码（选填）"
-            value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value)}
-            style={styles.input}
-          />
-
-          <button onClick={handleLogin} style={styles.primaryBtn}>
-            登录系统
-          </button>
-
-          <button onClick={handleRegister} style={styles.secondaryBtn}>
-            注册账号
-          </button>
+          <button onClick={handleLogin} style={styles.primaryBtn}>登录系统</button>
+          <button onClick={handleRegister} style={styles.secondaryBtn}>注册账号</button>
         </section>
       </main>
     )
@@ -187,13 +156,42 @@ export default function Home() {
           <p style={styles.subtitle}>专业内容合规检测，适合短视频、种草、小说、广告与商业文案。</p>
         </div>
 
-        <div style={styles.userBox}>
-          <p>用户：{user.username}</p>
-          <p>免费次数：{user.freeUses}</p>
-          <p>会员状态：{user.isVip ? `有效至 ${user.vipUntil.slice(0, 10)}` : '未开通'}</p>
-          <button onClick={() => setUser(null)} style={styles.logoutBtn}>退出</button>
+        <div style={styles.topRight}>
+          <button onClick={() => setShowAdmin(!showAdmin)} style={styles.adminTopBtn}>
+            管理员后台
+          </button>
+
+          <div style={styles.userBox}>
+            <p>用户：{user.username}</p>
+            <p>免费次数：{user.freeUses}</p>
+            <p>会员状态：{user.isVip ? `有效至 ${user.vipUntil.slice(0, 10)}` : '未开通'}</p>
+            <button onClick={() => setUser(null)} style={styles.logoutBtn}>退出</button>
+          </div>
         </div>
       </header>
+
+      {showAdmin && (
+        <section style={styles.adminPanel}>
+          <h2>管理员后台</h2>
+          <p>用于用户付款后，手动给指定用户开通会员。</p>
+
+          <input type="password" placeholder="管理员密码" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} style={styles.adminInput} />
+          <input placeholder="用户名称" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} style={styles.adminInput} />
+
+          <select value={adminDays} onChange={(e) => setAdminDays(e.target.value)} style={styles.adminInput}>
+            <option value="7">7天会员</option>
+            <option value="30">30天会员</option>
+            <option value="365">365天会员</option>
+          </select>
+
+          <div style={styles.adminBtnRow}>
+            <button onClick={adminOpenVip} style={styles.adminBtn}>开通会员</button>
+            <button onClick={adminQueryUser} style={styles.adminBtnSecondary}>查询用户</button>
+          </div>
+
+          <pre style={styles.adminResult}>{adminResult || '操作结果会显示在这里'}</pre>
+        </section>
+      )}
 
       <section style={styles.inviteBox}>
         <h2>邀请奖励</h2>
@@ -206,81 +204,37 @@ export default function Home() {
           <h3>周会员</h3>
           <p style={styles.price}>¥9.9</p>
           <p>解锁 7 天 AI 改写</p>
-          <button onClick={() => buyVip('week')} style={styles.payBtn}>模拟开通</button>
+          <button onClick={() => buyVip('week')} style={styles.payBtn}>立即开通</button>
         </div>
 
         <div style={styles.priceCardHot}>
           <h3>月会员</h3>
           <p style={styles.price}>¥29.9</p>
           <p>解锁 30 天 AI 改写</p>
-          <button onClick={() => buyVip('month')} style={styles.payBtn}>模拟开通</button>
+          <button onClick={() => buyVip('month')} style={styles.payBtn}>推荐开通</button>
         </div>
 
         <div style={styles.priceCard}>
           <h3>年会员</h3>
           <p style={styles.price}>¥199</p>
           <p>解锁 365 天 AI 改写</p>
-          <button onClick={() => buyVip('year')} style={styles.payBtn}>模拟开通</button>
+          <button onClick={() => buyVip('year')} style={styles.payBtn}>开通年费</button>
         </div>
       </section>
 
       <section style={styles.manualPayBox}>
         <div>
-          <h2>人工开通会员</h2>
-          <p>扫码付款后添加客服，备注你的用户名，人工开通会员。</p>
-          <p style={styles.warnText}>当前支付为人工开通版本，后续可升级自动支付。</p>
+          <h2>支付宝扫码付款</h2>
+          <p>支付完成后添加客服微信，备注你的用户名，人工开通会员。</p>
+          <p style={styles.warnText}>客服微信：{WECHAT_ID}</p>
+          <p style={styles.warnText}>付款备注建议填写用户名：{user.username}</p>
         </div>
 
         <div style={styles.qrBox}>
-          <div style={styles.fakeQr}>收款码</div>
-          <p>微信 / 支付宝收款码</p>
-          <p>客服微信：这里改成你的微信号</p>
+          <img src="/pay.png" alt="支付宝收款码" style={styles.payImage} />
+          <p>支付宝收款码</p>
+          <p>客服微信：{WECHAT_ID}</p>
         </div>
-      </section>
-
-      <section style={styles.adminBox}>
-        <button onClick={() => setShowAdmin(!showAdmin)} style={styles.adminToggle}>
-          {showAdmin ? '收起管理员后台' : '打开管理员后台'}
-        </button>
-
-        {showAdmin && (
-          <div style={styles.adminPanel}>
-            <h2>管理员后台</h2>
-            <p>用于人工收款后，给指定用户开通会员。</p>
-
-            <input
-              type="password"
-              placeholder="管理员密码"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              style={styles.adminInput}
-            />
-
-            <input
-              placeholder="用户名称"
-              value={adminUsername}
-              onChange={(e) => setAdminUsername(e.target.value)}
-              style={styles.adminInput}
-            />
-
-            <select
-              value={adminDays}
-              onChange={(e) => setAdminDays(e.target.value)}
-              style={styles.adminInput}
-            >
-              <option value="7">7天会员</option>
-              <option value="30">30天会员</option>
-              <option value="365">365天会员</option>
-            </select>
-
-            <div style={styles.adminBtnRow}>
-              <button onClick={adminOpenVip} style={styles.adminBtn}>开通会员</button>
-              <button onClick={adminQueryUser} style={styles.adminBtnSecondary}>查询用户</button>
-            </div>
-
-            <pre style={styles.adminResult}>{adminResult || '操作结果会显示在这里'}</pre>
-          </div>
-        )}
       </section>
 
       <section style={styles.toolGrid}>
@@ -420,6 +374,21 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: { fontSize: '38px', margin: '0 0 12px' },
   subtitle: { color: '#94a3b8', fontSize: '16px' },
+  topRight: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    alignItems: 'flex-end',
+  },
+  adminTopBtn: {
+    padding: '10px 16px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
   userBox: {
     padding: '16px',
     borderRadius: '18px',
@@ -427,6 +396,50 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid rgba(255,255,255,0.12)',
   },
   logoutBtn: { border: 'none', borderRadius: '10px', padding: '8px 12px', cursor: 'pointer' },
+  adminPanel: {
+    maxWidth: '1200px',
+    margin: '24px auto',
+    padding: '24px',
+    borderRadius: '24px',
+    background: 'rgba(15,23,42,0.95)',
+    border: '1px solid rgba(255,255,255,0.14)',
+  },
+  adminInput: {
+    width: '100%',
+    padding: '13px',
+    marginTop: '12px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+  },
+  adminBtnRow: { display: 'flex', gap: '12px', marginTop: '14px' },
+  adminBtn: {
+    padding: '12px 18px',
+    borderRadius: '12px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  adminBtnSecondary: {
+    padding: '12px 18px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'transparent',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  adminResult: {
+    marginTop: '16px',
+    padding: '16px',
+    borderRadius: '14px',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#e5e7eb',
+    whiteSpace: 'pre-wrap',
+  },
   inviteBox: {
     maxWidth: '1200px',
     margin: '24px auto',
@@ -478,78 +491,14 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid rgba(255,255,255,0.14)',
   },
   warnText: { color: '#facc15' },
-  qrBox: { minWidth: '210px', textAlign: 'center' },
-  fakeQr: {
-    width: '150px',
-    height: '150px',
-    margin: '0 auto 12px',
+  qrBox: { minWidth: '230px', textAlign: 'center' },
+  payImage: {
+    width: '180px',
+    height: '180px',
+    objectFit: 'cover',
     borderRadius: '18px',
     background: '#fff',
-    color: '#111827',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 800,
-  },
-  adminBox: {
-    maxWidth: '1200px',
-    margin: '24px auto',
-  },
-  adminToggle: {
-    padding: '14px 22px',
-    borderRadius: '14px',
-    border: '1px solid rgba(255,255,255,0.18)',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 700,
-  },
-  adminPanel: {
-    marginTop: '16px',
-    padding: '24px',
-    borderRadius: '24px',
-    background: 'rgba(15,23,42,0.9)',
-    border: '1px solid rgba(255,255,255,0.14)',
-  },
-  adminInput: {
-    width: '100%',
-    padding: '13px',
-    marginTop: '12px',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.14)',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#fff',
-  },
-  adminBtnRow: {
-    display: 'flex',
-    gap: '12px',
-    marginTop: '14px',
-  },
-  adminBtn: {
-    padding: '12px 18px',
-    borderRadius: '12px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 700,
-  },
-  adminBtnSecondary: {
-    padding: '12px 18px',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.18)',
-    background: 'transparent',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 700,
-  },
-  adminResult: {
-    marginTop: '16px',
-    padding: '16px',
-    borderRadius: '14px',
-    background: 'rgba(255,255,255,0.06)',
-    color: '#e5e7eb',
-    whiteSpace: 'pre-wrap',
+    padding: '8px',
   },
   toolGrid: {
     maxWidth: '1200px',
