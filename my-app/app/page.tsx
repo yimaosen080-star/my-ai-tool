@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-const API_URL = 'http://47.95.118.210/api'
+const API_URL = '/api'
 const WECHAT_ID = 'A15069916247'
 
 const tools = [
@@ -11,6 +11,53 @@ const tools = [
   { key: 'novel', name: '小说违禁词检测', desc: '网文、章节、剧情内容降敏' },
   { key: 'adlaw', name: '广告法极限词检测', desc: '企业宣传、产品卖点合规' },
   { key: 'copywriting', name: 'AI文案优化', desc: '标题、口播、成交文案优化' },
+]
+
+const plans = [
+  {
+    key: 'week',
+    name: '体验卡',
+    price: '¥9.9',
+    days: '7天',
+    tag: '新用户试用',
+    desc: '适合临时检测文案',
+    features: ['每天30次', '基础速度', '适合体验功能'],
+    highlight: false,
+    button: '开通体验卡',
+  },
+  {
+    key: 'month',
+    name: '月卡会员',
+    price: '¥39',
+    days: '30天',
+    tag: '按月付费',
+    desc: '适合短期高频使用',
+    features: ['不限次数', '正常响应', '适合短期项目'],
+    highlight: false,
+    button: '开通月卡',
+  },
+  {
+    key: 'year',
+    name: '年卡会员',
+    price: '¥159',
+    days: '365天',
+    tag: '🔥 超值推荐',
+    desc: '每天仅需约0.4元，比月卡更划算',
+    features: ['不限次数', '优先体验', '专属客服支持', '比月卡节省约70%'],
+    highlight: true,
+    button: '立即开通年卡',
+  },
+  {
+    key: 'half',
+    name: '半年卡',
+    price: '¥99',
+    days: '180天',
+    tag: '高性价比',
+    desc: '适合稳定使用一段时间',
+    features: ['不限次数', '稳定使用', '约16元/月'],
+    highlight: false,
+    button: '开通半年卡',
+  },
 ]
 
 export default function Home() {
@@ -79,8 +126,8 @@ export default function Home() {
     setLoading(false)
   }
 
-  const buyVip = () => {
-    alert(`请先扫码支付，然后添加客服微信：${WECHAT_ID}，备注你的用户名：${user.username}`)
+  const buyVip = (planName: string, price: string) => {
+    alert(`请先扫码支付 ${price}，然后添加客服微信：${WECHAT_ID}，备注你的用户名：${user.username} 和套餐：${planName}`)
   }
 
   const adminOpenVip = async () => {
@@ -176,6 +223,7 @@ export default function Home() {
           <select value={adminDays} onChange={(e) => setAdminDays(e.target.value)} style={styles.adminInput}>
             <option value="7">7天会员</option>
             <option value="30">30天会员</option>
+            <option value="180">180天会员</option>
             <option value="365">365天会员</option>
           </select>
 
@@ -194,33 +242,40 @@ export default function Home() {
         <p>好友注册时填写你的邀请码，你将获得 <b>3天会员</b> 奖励。</p>
       </section>
 
+      <section style={styles.payHeader}>
+        <div>
+          <h2>选择适合你的会员方案</h2>
+          <p>新用户可先体验，长期使用建议直接开通年卡，性价比最高。</p>
+        </div>
+        <div style={styles.yearTip}>年卡每天约 0.4 元</div>
+      </section>
+
       <section style={styles.payGrid}>
-        <div style={styles.priceCard}>
-          <h3>周会员</h3>
-          <p style={styles.price}>¥9.9</p>
-          <p>解锁 7 天 AI 改写</p>
-          <button onClick={buyVip} style={styles.payBtn}>立即开通</button>
-        </div>
+        {plans.map((plan) => (
+          <div key={plan.key} style={plan.highlight ? styles.priceCardHot : styles.priceCard}>
+            <div style={plan.highlight ? styles.hotTag : styles.normalTag}>{plan.tag}</div>
+            <h3>{plan.name}</h3>
+            <p style={styles.price}>{plan.price}</p>
+            <p style={styles.days}>{plan.days}</p>
+            <p style={styles.planDesc}>{plan.desc}</p>
 
-        <div style={styles.priceCardHot}>
-          <h3>月会员</h3>
-          <p style={styles.price}>¥29.9</p>
-          <p>解锁 30 天 AI 改写</p>
-          <button onClick={buyVip} style={styles.payBtn}>推荐开通</button>
-        </div>
+            <ul style={styles.featureList}>
+              {plan.features.map((item) => (
+                <li key={item}>✔ {item}</li>
+              ))}
+            </ul>
 
-        <div style={styles.priceCard}>
-          <h3>年会员</h3>
-          <p style={styles.price}>¥199</p>
-          <p>解锁 365 天 AI 改写</p>
-          <button onClick={buyVip} style={styles.payBtn}>开通年费</button>
-        </div>
+            <button onClick={() => buyVip(plan.name, plan.price)} style={plan.highlight ? styles.hotPayBtn : styles.payBtn}>
+              {plan.button}
+            </button>
+          </div>
+        ))}
       </section>
 
       <section style={styles.manualPayBox}>
         <div>
           <h2>支付宝扫码付款</h2>
-          <p>支付完成后添加客服微信，备注你的用户名，人工开通会员。</p>
+          <p>支付完成后添加客服微信，备注你的用户名和套餐，人工开通会员。</p>
           <p style={styles.warnText}>客服微信：{WECHAT_ID}</p>
           <p style={styles.warnText}>付款备注建议填写用户名：{user.username}</p>
         </div>
@@ -436,11 +491,27 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(96,165,250,0.12)',
     border: '1px solid rgba(96,165,250,0.25)',
   },
+  payHeader: {
+    maxWidth: '1200px',
+    margin: '24px auto 12px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  yearTip: {
+    padding: '14px 18px',
+    borderRadius: '999px',
+    background: 'linear-gradient(135deg, #facc15, #fb923c)',
+    color: '#111827',
+    fontWeight: 900,
+    whiteSpace: 'nowrap',
+  },
   payGrid: {
     maxWidth: '1200px',
     margin: '24px auto',
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
     gap: '18px',
   },
   priceCard: {
@@ -450,21 +521,60 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid rgba(255,255,255,0.12)',
   },
   priceCardHot: {
-    padding: '24px',
-    borderRadius: '24px',
-    background: 'linear-gradient(135deg, rgba(250,204,21,0.22), rgba(249,115,22,0.14))',
-    border: '1px solid rgba(250,204,21,0.35)',
+    padding: '28px',
+    borderRadius: '28px',
+    background: 'linear-gradient(135deg, rgba(250,204,21,0.28), rgba(249,115,22,0.18))',
+    border: '2px solid rgba(250,204,21,0.75)',
+    boxShadow: '0 24px 70px rgba(250,204,21,0.16)',
+    transform: 'scale(1.03)',
   },
-  price: { fontSize: '34px', fontWeight: 800, margin: '10px 0' },
+  normalTag: {
+    display: 'inline-block',
+    padding: '7px 12px',
+    borderRadius: '999px',
+    background: 'rgba(255,255,255,0.1)',
+    color: '#cbd5e1',
+    fontSize: '13px',
+  },
+  hotTag: {
+    display: 'inline-block',
+    padding: '7px 12px',
+    borderRadius: '999px',
+    background: '#facc15',
+    color: '#111827',
+    fontSize: '13px',
+    fontWeight: 900,
+  },
+  price: { fontSize: '38px', fontWeight: 900, margin: '12px 0 4px' },
+  days: { color: '#facc15', fontWeight: 700 },
+  planDesc: { color: '#cbd5e1', lineHeight: 1.6 },
+  featureList: {
+    paddingLeft: '0',
+    listStyle: 'none',
+    color: '#e5e7eb',
+    lineHeight: 1.9,
+    minHeight: '120px',
+  },
   payBtn: {
     width: '100%',
-    padding: '12px',
-    borderRadius: '12px',
+    padding: '13px',
+    borderRadius: '14px',
     border: 'none',
     background: '#fff',
     color: '#111827',
-    fontWeight: 700,
+    fontWeight: 800,
     cursor: 'pointer',
+  },
+  hotPayBtn: {
+    width: '100%',
+    padding: '15px',
+    borderRadius: '14px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #facc15, #fb923c)',
+    color: '#111827',
+    fontWeight: 900,
+    cursor: 'pointer',
+    fontSize: '16px',
   },
   manualPayBox: {
     maxWidth: '1200px',
